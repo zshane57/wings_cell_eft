@@ -1,7 +1,3 @@
-# From command line:
-#   Rscript normalisation_scale_rotate.R input.csv size_norm_out.csv rot_size_norm_out.csv final_norm_out.csv
-# -----------------------------------------------------------------------------
-
 suppressWarnings({
 	if (!requireNamespace("optparse", quietly = FALSE)) {
 		# lightweight, optional; we'll parse args manually if absent
