@@ -1,4 +1,4 @@
-mh_fold_5_dm_guide_data.txt
+fold_5_dm_guide_data.txt
 NA
 2
 1 sample_name x
