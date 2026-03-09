@@ -1,29 +1,3 @@
-#!/usr/bin/env Rscript
-# normalisation_scale_rotate.R
-# -----------------------------------------------------------------------------
-# Applies three-step EFD normalisation (size, rotation, and starting point)
-# to a CSV containing elliptic Fourier coefficients for harmonic 10.
-#
-# INPUT CSV structure (wide format):
-#   id,species,family,a1,a2,...,a10,b1,...,b10,c1,...,c10,d1,...,d10
-# Each row represents one shape; a1..a10 etc. are raw (un-normalized) harmonic
-# coefficients (Kuhl & Giardina form). Rows may contain additional metadata
-# columns before the coefficient block; this script assumes exactly 3 metadata
-# columns as described.
-#
-# OUTPUT:
-#   Three data frames / CSVs:
-#     *_size_norm.csv      : coefficients after size normalization only.
-#     *_rot_size_norm.csv  : coefficients after size + rotation normalization.
-#     *_final_norm.csv     : coefficients after all three normalizations.
-#   All retain id,species,family and coefficients in SAME ordering
-#   (a1..a10,b1..b10,c1..c10,d1..d10) but values replaced by normalized ones.
-#
-# USAGE EXAMPLES (inside R):
-#   source("normalisation_scale_rotate.R")
-#   result <- process_efd_csv("efd_coeffs_raw.csv")
-#   # result is a list with $size_norm, $rot_size_norm, and $final_norm data.frames
-#
 # From command line:
 #   Rscript normalisation_scale_rotate.R input.csv size_norm_out.csv rot_size_norm_out.csv final_norm_out.csv
 # -----------------------------------------------------------------------------
