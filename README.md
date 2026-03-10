@@ -1,4 +1,4 @@
-# Title of Pipeline: Wing Morphometrics Segmentation and Dataset Preparation Pipeline
+# Title of Pipeline: Wing Morphometrics Segmentation and EFT-Based Dataset Preparation Pipeline
 
 Authors: Khor, Z.S, Ling, M.H., Ivorra, T., Heo, C.C., Wardhana, A.H., Hall, M.J.R., Tan, S.H., Mohamed, Z., Khang, T.F.
 Email: tfkhang[at]um[dot]edu[dot]my
