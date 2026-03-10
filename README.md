@@ -13,7 +13,7 @@
 ### 3. Classification & Modeling
 * **[`5fold_lda.R`](5fold_lda.R)**: Generates 5-fold cross-validation sets and executes Linear Discriminant Analysis (LDA) on each set. Converts and outputs the processed data into the required format for GUIDE.
 
-### 📁 Data & Model Inputs
+### Data & Model Inputs
 * **`dm_guide/`**: Directory containing input files specifically formatted for GUIDE decision tree and random forest modeling for `dm` cells.
 * **`pa2r_guide/`**: Directory containing input files specifically formatted for GUIDE decision tree and random forest modeling for `pa2r` cells.
 
