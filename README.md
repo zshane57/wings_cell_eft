@@ -25,4 +25,4 @@ This pipeline is to segement cell compartment and prepare Elliptic Fourier Trans
 * **`pa2r_guide/`**: Directory containing input files specifically formatted for GUIDE decision tree and random forest modeling for `pa2r` cells.
 
 ---
-*Note: This pipeline integrates Python-based computer-vision segmentation (SAM2) with R-based morphometric analysis tools (Momocs EFD, LDA, GUIDE).*
+*Note: This pipeline integrates Python-based computer-vision segmentation (SAM2) with R-based morphometric analysis tools (Momocs, LDA, GUIDE).*
