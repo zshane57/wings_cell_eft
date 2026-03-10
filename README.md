@@ -1,4 +1,11 @@
-# Wing Morphometrics and Segmentation Pipeline
+# Title of Pipeline: Wing Morphometrics Segmentation and Dataset Preparation Pipeline
+
+Authors: Khor, Z.S, Ling, M.H., Ivorra, T., Heo, C.C., Wardhana, A.H., Hall, M.J.R., Tan, S.H., Mohamed, Z., Khang, T.F.
+Email: tfkhang[at]um[dot]edu[dot]my
+
+Date: [DD] [Mon] 2026
+
+This pipeline is to segement cell compartment and prepare Elliptic Fourier Transform (EFT) Coefficients based dataset for GUIDE decision tree and random forest models training. 
 
 ## Repository Organisation
 
@@ -18,4 +25,4 @@
 * **`pa2r_guide/`**: Directory containing input files specifically formatted for GUIDE decision tree and random forest modeling for `pa2r` cells.
 
 ---
-*Note: This pipeline integrates Python-based computer-vision segmentation (SAM2) with R-based morphometric analysis tools (Momocs, LDA, GUIDE).*
+*Note: This pipeline integrates Python-based computer-vision segmentation (SAM2) with R-based morphometric analysis tools (Momocs EFD, LDA, GUIDE).*
