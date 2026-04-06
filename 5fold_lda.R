@@ -135,14 +135,10 @@ for (fold in 1:5) {
     ld_train_centered,
     stringsAsFactors = FALSE
   )
-
-  # ...existing code...
   
   # Output df_train (after LDA, before SMOTE) for cross-checking
   pre_smote_file <- file.path(output_folder, paste0("mh_fold_", fold, "_pre_smote_train.csv"))
   write.csv(df_train, file = pre_smote_file, row.names = FALSE)
-  
-  # ...existing code...
   
   # Find the size of the largest class and set target size
   class_sizes <- table(df_train$species)
