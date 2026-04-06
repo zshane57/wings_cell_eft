@@ -8,7 +8,7 @@ original_csv <- "/Users/zshane/Documents/um_msc/efd_h10/h10_dm_final_norm.csv"
 cell_name <- "dm"
 
 # output folder (adjust as needed)
-output_folder <- "/Users/zshane/Documents/um_msc/dm_h10_guide"
+output_folder <- "/Users/zshane/Documents/um_msc/revised_efd_h10"
 
 if (!dir.exists(output_folder)) {
   dir.create(output_folder)
@@ -128,94 +128,104 @@ for (fold in 1:5) {
   # Center the testing LDA components using the training-set means.
   ld_test_centered <- sweep(ld_test, 2, mean_ld_train, FUN = "-")
   
-  # Build data frames with sample_name, species, LD components and weight.
+  # Build data frame for training
+  # Keep a row_id so original sample names can be restored after ENN
   df_train <- data.frame(
-    sample_name = train_fd$sample_name,
+    row_id = seq_len(nrow(train_fd)),
     species = train_fd$species,
     ld_train_centered,
     stringsAsFactors = FALSE
   )
-  
+
+  # Store original sample-name lookup
+  name_lookup <- setNames(train_fd$sample_name, df_train$row_id)
+
   # Output df_train (after LDA, before SMOTE) for cross-checking
   pre_smote_file <- file.path(output_folder, paste0("mh_fold_", fold, "_pre_smote_train.csv"))
   write.csv(df_train, file = pre_smote_file, row.names = FALSE)
-  
-  # Find the size of the largest class and set target size
-  class_sizes <- table(df_train$species)
-  target_size <- 41  # Target size for minority classes
-  
-  # Create C.perc list for each class
-  C.perc_list <- sapply(names(class_sizes), function(sp) {
-    size <- class_sizes[sp]
-    if (size < target_size) {
-      # Calculate exact percentage needed to reach target_size
-      perc <- (target_size / size)
-      return(perc)
-    } else {
-      return(1)  # No change for classes >= target_size
-    }
-  })
-  
-  # Convert to named list as required by SmoteClassif
-  C.perc_list <- as.list(C.perc_list)
-  names(C.perc_list) <- names(class_sizes)
-  
-  # Prepare data for SMOTE: only LDA columns + species
-  smote_input <- df_train
-  smote_input$sample_name <- NULL  # Remove sample_name
-  
-  # Apply SMOTE
-  df_train_smote <- SmoteClassif(species ~ ., 
-                                 smote_input, 
-                                 C.perc = C.perc_list)
-  
-  n_original <- nrow(df_train)
-  n_total <- nrow(df_train_smote)
-  n_synth <- n_total - n_original
 
-  # Identify species that were oversampled (needed SMOTE) and those that were not
-  species_counts <- table(df_train$species)
-  species_oversampled <- names(species_counts)[species_counts < target_size]
-  species_unbothered <- names(species_counts)[species_counts >= target_size]
-  
-  # For unbothered species, get their sample_names and assign back after SMOTE
-  unbothered_idx <- which(df_train$species %in% species_unbothered)
-  unbothered_sample_names <- df_train$sample_name[unbothered_idx]
-  unbothered_species <- df_train$species[unbothered_idx]
-  
-  # For oversampled species, get their sample_names and assign to the last n_orig rows of each species group after SMOTE
-  oversampled_sample_names <- split(df_train$sample_name[df_train$species %in% species_oversampled],
-                                   df_train$species[df_train$species %in% species_oversampled])
-  oversampled_counts <- species_counts[species_oversampled]
-  
-  # Prepare a vector for the new sample_name column
-  new_sample_names <- character(nrow(df_train_smote))
-  
-  for (sp in unique(df_train_smote$species)) {
-    sp_idx <- which(df_train_smote$species == sp)
-    n_sp <- length(sp_idx)
-    if (sp %in% species_unbothered) {
-      # Assign original sample names for unbothered species
-      new_sample_names[sp_idx] <- unbothered_sample_names[unbothered_species == sp]
+  # -----------------------------
+  # SMOTE + ENN
+  # -----------------------------
+  set.seed(123)
+
+  class_sizes <- table(df_train$species)
+  target_size <- 41
+
+  # Oversample only classes below target_size
+  C.perc_list <- lapply(names(class_sizes), function(sp) {
+    size <- as.integer(class_sizes[[sp]])
+    if (size < target_size) target_size / size else 1
+  })
+  names(C.perc_list) <- names(class_sizes)
+
+  df_train_smote <- SmoteClassif(
+    species ~ . - row_id,
+    df_train,
+    C.perc = C.perc_list
+  )
+
+  # ENN cleaning
+  df_train_enn <- ENNClassif(
+    species ~ . - row_id,
+    df_train_smote
+  )[[1]]
+
+  # ENN does not guarantee a fixed final size, so cap each class at 41
+  df_train_enn <- do.call(rbind, lapply(split(df_train_enn, df_train_enn$species), function(d) {
+    if (nrow(d) > target_size) {
+      d[sample(seq_len(nrow(d)), target_size), , drop = FALSE]
     } else {
-      # For oversampled species
-      n_orig <- oversampled_counts[sp]
-      n_synth <- n_sp - n_orig
-      # Assign synthetic names to the first n_synth rows
-      if (n_synth > 0) {
-        sp_clean <- gsub(" ", "", sp)
-        new_sample_names[sp_idx[1:n_synth]] <- paste0("synthetic_", sp_clean, "_", seq_len(n_synth))
-      }
-      # Assign original sample names to the last n_orig rows
-      new_sample_names[sp_idx[(n_synth+1):n_sp]] <- oversampled_sample_names[[sp]]
+      d
     }
+  }))
+  rownames(df_train_enn) <- NULL
+
+  # Restore / generate sample names
+  df_train_enn$sample_name <- NA_character_
+
+  orig_idx <- which(!is.na(df_train_enn$row_id))
+  df_train_enn$sample_name[orig_idx] <- name_lookup[as.character(df_train_enn$row_id[orig_idx])]
+
+  syn_idx <- which(is.na(df_train_enn$row_id))
+  if (length(syn_idx) > 0) {
+    syn_sp <- as.character(df_train_enn$species[syn_idx])
+    syn_num <- ave(syn_idx, syn_sp, FUN = seq_along)
+    df_train_enn$sample_name[syn_idx] <- paste0(
+      "synthetic_",
+      gsub("[^A-Za-z0-9]", "", syn_sp),
+      "_",
+      syn_num
+    )
   }
-  
-  df_train_smote$sample_name <- new_sample_names
-  df_train_smote$weight <- 1
-  
-  # Reorder columns: sample_name, species, LDA columns, weight
-  df_train_final <- df_train_smote[, c("sample_name", "species", colnames(ld_train_centered), "weight")]
+
+  df_train_enn$weight <- 1
+  df_train_final <- df_train_enn[, c("sample_name", "species", colnames(ld_train_centered), "weight")]
+
+  # Restore / generate sample names
+  df_train_enn$sample_name <- NA_character_
+
+  # Original samples: restore names by row_id
+  orig_idx <- which(!is.na(df_train_enn$row_id))
+  df_train_enn$sample_name[orig_idx] <- name_lookup[as.character(df_train_enn$row_id[orig_idx])]
+
+  # Synthetic samples: generate names per species
+  syn_idx <- which(is.na(df_train_enn$row_id))
+  if (length(syn_idx) > 0) {
+    syn_sp <- as.character(df_train_enn$species[syn_idx])
+    syn_num <- ave(syn_idx, syn_sp, FUN = seq_along)
+    df_train_enn$sample_name[syn_idx] <- paste0(
+      "synthetic_",
+      gsub("[^A-Za-z0-9]", "", syn_sp),
+      "_",
+      syn_num
+    )
+  }
+
+  df_train_enn$weight <- 1
+
+  # Final training set
+  df_train_final <- df_train_enn[, c("sample_name", "species", colnames(ld_train_centered), "weight")]
   
   # Prepare testing set
   df_test <- data.frame(
@@ -262,7 +272,7 @@ for (fold in 1:5) {
   # Define the Output File Name
   # -----------------------------
   # Construct the output file name: e.g., "fold1_guide_in.txt"
-  output_file <- file.path(output_folder, paste0("mh_fold_", fold, "_",cell_name,"_guide_data.txt"))
+  output_file <- file.path(output_folder, paste0("fd", fold, "_",cell_name,"_guide_data.txt"))
   
   # Write the result (with header) to a comma-separated file.
   write.table(combined_ld,
