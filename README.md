@@ -4,9 +4,9 @@ Authors: Khor, Z.S, Ling, M.H., Ivorra, T., Heo, C.C., Wardhana, A.H., Hall, M.J
 
 Email: tfkhang@um.edu.my
 
-Date: [DD] [Mon] 2026
+Date: 2026
 
-This pipeline is to segement cell compartment and prepare Elliptic Fourier Transform (EFT) Coefficients based dataset for GUIDE decision tree and random forest models training. 
+This pipeline is to segment cell compartment and prepare Elliptic Fourier Transform (EFT) Coefficients based dataset for GUIDE decision tree and random forest models training. 
 
 ## Repository Organisation
 
